@@ -1,0 +1,33 @@
+* Advent of Code 2019
+
+The past two years of Advent of Code, I have used it as an opportunity to learn
+new programming languages. The first one I did, I learned ReasonML/OCaml and 
+used the bucklescript toolchain. Last year, I attempted to do dual Clojure
+(which I already knew) and Rust solutions, but didn't get very far due to time.
+
+This year I want to try something different. This year, I will be attempting
+Advent of Code in a literate programming fashion using Clojure and Emacs' org-
+mode.
+
+This means that I will be writing my Code within .org files alongside my
+thoughts and docs, evaluating code blocks and untangling them into the final
+source.
+
+For instance, this is a source block which I can run in a live CIDER session:
+
+#+begin_src clojure :results pp
+(+ 1 1)
+#+end_src
+
+#+RESULTS:
+: 2
+
+
+I can also pipe STDOUT to the results in org-mode as well:
+
+#+begin_src clojure :results output
+(prn *ns*)
+#+end_src
+
+#+RESULTS:
+: #namespace[user]
