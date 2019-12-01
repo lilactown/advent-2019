@@ -21,41 +21,43 @@ The Fuel Counter-Upper needs to know the total fuel requirement. To find it, ind
 
 To start, let's load the input.
 
-#+begin_src clojure
-  (require '[clojure.java.io :as io])
+#+begin_src clojure :tangle yes
+(ns advent-2019.day1)
 
-  (require '[clojure.string :as string])
+(require '[clojure.java.io :as io])
 
-  (def input (-> (io/resource "day1.input")
-                 (slurp)
-                 (string/split #"\n")
-                 (->> (map #(Integer/parseInt %)))))
+(require '[clojure.string :as string])
+
+(def input (-> (io/resource "day1.input")
+               (slurp)
+               (string/split #"\n")
+               (->> (map #(Integer/parseInt %)))))
 #+end_src
 
 #+RESULTS:
-: nilnilnil#'user/input
+: nilnilnilnil#'advent-2019.day1/input
 
 
 We also can encode the mass calculation: take the mass, divide by 3, round down,
 minus 2
 
-#+begin_src clojure
-  (defn fuel [mass] 
-    (-> mass (/ 3) (Math/floor) (- 2) (int)))
+#+begin_src clojure :ns advent-2019.day1 :tangle yes
+(defn fuel [mass] 
+  (-> mass (/ 3) (Math/floor) (- 2) (int)))
 #+end_src
 
 #+RESULTS:
-: nil#'user/fuel
+: nil#'advent-2019.day1/fuel
 
 
 * Part 1
 
 What is the sum of the fuel requirements for all of the modules on your spacecraft?
 
-#+begin_src clojure :results output
-  (def part1 (transduce (map fuel) + input))
+#+begin_src clojure :results output :ns advent-2019.day1
+(def part1 (transduce (map fuel) + input))
 
-  (println part1)
+(println part1)
 #+end_src
 
 #+RESULTS:
@@ -101,32 +103,31 @@ end.)
 
 Let's just try the naive version:
 
-#+begin_src clojure
+#+begin_src clojure :ns advent-2019.day1
+(defn fuel2 
+  ([mass]
+   (fuel2 (fuel mass) 0))
+  ([mass sum]
+   (if (<= mass 0)
+     sum
+     (recur (fuel mass)
+            (+ sum mass)))))
 
-  (defn fuel2 
-    ([mass]
-     (fuel2 (fuel mass) 0))
-    ([mass sum]
-     (if (<= mass 0)
-       sum
-       (recur (fuel mass)
-              (+ sum mass)))))
+(assert (= (fuel2 1969) 966))
 
-  (assert (= (fuel2 1969) 966))
-
-  (assert (= (fuel2 100756) 50346))
+(assert (= (fuel2 100756) 50346))
 
 #+end_src
 
 #+RESULTS:
-: nil#'user/fuel2nilnil
+: nil#'advent-2019.day1/fuel2nilnil
 
 Seems fast enough on the test input. Let's do it!
 
-#+begin_src clojure :results output
-  (def part2 (transduce (map fuel2) + input))
+#+begin_src clojure :results output :ns advent-2019.day1
+(def part2 (transduce (map fuel2) + input))
 
-  (println part2)
+(println part2)
 #+end_src
 
 #+RESULTS:
