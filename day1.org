@@ -21,7 +21,7 @@ The Fuel Counter-Upper needs to know the total fuel requirement. To find it, ind
 
 To start, let's load the input.
 
-#+begin_src clojure :ns advent-2019.day1 :noweb yes :exports none :mkdirp yes :tangle src/advent-2019/day1.clj
+#+begin_src clojure :ns advent-2019.day1 :noweb yes :mkdirp yes :tangle src/advent-2019/day1.clj
 (require '[clojure.java.io :as io])
 
 (require '[clojure.string :as string])
