@@ -25,7 +25,7 @@ The Fuel Counter-Upper needs to know the total fuel requirement. To find it, ind
  new line. Then, I convert each line from a string to an integer.
  
 
- #+begin_src clojure :ns advent-2019.day1 :noweb yes :export no :mkdirp yes :tangle src/advent-2019/day1.clj
+ #+begin_src clojure :ns advent-2019.day1 :noweb yes :exports no :mkdirp yes :tangle src/advent-2019/day1.clj
  <<code>>
  #+end_src
 
