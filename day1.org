@@ -1,4 +1,5 @@
---- Day 1: The Tyranny of the Rocket Equation ---
+* Day 1: The Tyranny of the Rocket Equation
+
 Santa has become stranded at the edge of the Solar System while delivering presents to other planets! To accurately calculate his position in space, safely align his warp drive, and return to Earth in time to save Christmas, he needs you to bring him measurements from fifty stars.
 
 Collect stars by solving puzzles. Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants one star. Good luck!
@@ -17,138 +18,138 @@ For a mass of 1969, the fuel required is 654.
 For a mass of 100756, the fuel required is 33583.
 The Fuel Counter-Upper needs to know the total fuel requirement. To find it, individually calculate the fuel needed for the mass of each module (your puzzle input), then add together all the fuel values.
 
-* Prelude
+** Prelude
 
-To start, let's load the input. Each line of our input is a different mass; so
-I start by reading it from my classpath ("resources/day1.input") and split it on
-new line. Then, I convert each line from a string to an integer.
+ To start, let's load the input. Each line of our input is a different mass; so
+ I start by reading it from my classpath ("resources/day1.input") and split it on
+ new line. Then, I convert each line from a string to an integer.
 
-#+begin_src clojure :ns advent-2019.day1 :noweb yes :mkdirp yes :tangle src/advent-2019/day1.clj
-(require '[clojure.java.io :as io])
+ #+begin_src clojure :ns advent-2019.day1 :noweb yes :mkdirp yes :tangle src/advent-2019/day1.clj
+ (require '[clojure.java.io :as io])
 
-(require '[clojure.string :as string])
+ (require '[clojure.string :as string])
 
-(def input (-> (io/resource "day1.input")
-               (slurp)
-               (string/split #"\n")
-               (->> (map #(Integer/parseInt %)))))
+ (def input (-> (io/resource "day1.input")
+                (slurp)
+                (string/split #"\n")
+                (->> (map #(Integer/parseInt %)))))
 
-<<code>>
-#+end_src
+ <<code>>
+ #+end_src
 
-#+RESULTS:
-: nilnilnilnil#'advent-2019.day1/input
-
-
-We also can encode the mass calculation: take the mass, divide by 3, round down,
-minus 2
-
-#+begin_src clojure :ns advent-2019.day1 :noweb-ref code
-(defn fuel [mass]
-  (-> mass (/ 3) (Math/floor) (- 2) (int)))
-
-#+end_src
-
-#+RESULTS:
-: nil#'advent-2019.day1/fuel
+ #+RESULTS:
+ : nilnilnilnil#'advent-2019.day1/input
 
 
-* Part 1
+ We also can encode the mass calculation: take the mass, divide by 3, round down,
+ minus 2
 
-What is the sum of the fuel requirements for all of the modules on your spacecraft?
+ #+begin_src clojure :ns advent-2019.day1 :noweb-ref code
+ (defn fuel [mass]
+   (-> mass (/ 3) (Math/floor) (- 2) (int)))
 
+ #+end_src
 
----
-
-This seems easy enough. We need to calculate the fuel required for each mass in
-our input, and then sum it all up.
-
-The first step can be easily done with a =map= over the sequence of masses.
-Summing them up sounds like a =reduce=; to do it all in one go, we can use
-transducers!
-
-#+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
-(def part1 (transduce (map fuel) + input))
-
-(println part1)
-
-#+end_src
-
-#+RESULTS:
-: 3397667
+ #+RESULTS:
+ : nil#'advent-2019.day1/fuel
 
 
-* Part 2
+** Part 1
 
-During the second Go / No Go poll, the Elf in charge of the Rocket Equation
-Double-Checker stops the launch sequence. Apparently, you forgot to include
-additional fuel for the fuel you just added.
-
-Fuel itself requires fuel just like a module - take its mass, divide by three,
-round down, and subtract 2. However, that fuel also requires fuel, and that fuel
-requires fuel, and so on. Any mass that would require negative fuel should
-instead be treated as if it requires zero fuel; the remaining mass, if any, is
-instead handled by wishing really hard, which has no mass and is outside the
-scope of this calculation.
-
-So, for each module mass, calculate its fuel and add it to the total. Then,
-treat the fuel amount you just calculated as the input mass and repeat the
-process, continuing until a fuel requirement is zero or negative. For example:
-
-A module of mass 14 requires 2 fuel. This fuel requires no further fuel (2
-divided by 3 and rounded down is 0, which would call for a negative fuel), so
-the total fuel required is still just 2.
-
-At first, a module of mass 1969 requires 654 fuel. Then, this fuel requires 216
-more fuel (654 / 3 - 2). 216 then requires 70 more fuel, which requires 21 fuel,
-which requires 5 fuel, which requires no further fuel. So, the total fuel
-required for a module of mass 1969 is 654 + 216 + 70 + 21 + 5 = 966.
-
-The fuel required by a module of mass 100756 and its fuel is:
-33583 + 11192 +3728 + 1240 + 411 + 135 + 43 + 12 + 2 = 50346.
-
-What is the sum of the fuel requirements for all of the modules on your
-spacecraft when also taking into account the mass of the added fuel? (Calculate
-the fuel requirements for each module separately, then add them all up at the
-end.)
+ What is the sum of the fuel requirements for all of the modules on your spacecraft?
 
 
----
+ ---
 
-Let's just try the naive version. We will calculate the fuel requirements again
-for each mass, this time recursing for each until we hit a value that is <= 0.
+ This seems easy enough. We need to calculate the fuel required for each mass in
+ our input, and then sum it all up.
 
-Fun fact: =defn= is a valid =recur= target, so we don't need a =loop= here as
-long as we're a tiny bit clever with our function signature.
+ The first step can be easily done with a =map= over the sequence of masses.
+ Summing them up sounds like a =reduce=; to do it all in one go, we can use
+ transducers!
 
-#+begin_src clojure :ns advent-2019.day1 :noweb-ref code
-(defn fuel2
-  ([mass]
-   ;; we don't add the initial mass. we just want the fuel's mass
-   ;; so we initialize the loop with the mass of the fuel
-   (fuel2 (fuel mass) 0))
-  ([mass sum]
-   (if (<= mass 0)
-     sum
-     (recur (fuel mass)
-            (+ sum mass)))))
+ #+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
+ (def part1 (transduce (map fuel) + input))
 
-(assert (= (fuel2 1969) 966))
+ (println part1)
 
-(assert (= (fuel2 100756) 50346))
+ #+end_src
 
-#+end_src
+ #+RESULTS:
+ : 3397667
 
-#+RESULTS:
-: nil#'advent-2019.day1/fuel2nilnil
 
-Seems fast enough on the test input. Let's do it!
+** Part 2
 
-#+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
-(def part2 (transduce (map fuel2) + input))
+ During the second Go / No Go poll, the Elf in charge of the Rocket Equation
+ Double-Checker stops the launch sequence. Apparently, you forgot to include
+ additional fuel for the fuel you just added.
 
-(println part2)
-#+end_src
+ Fuel itself requires fuel just like a module - take its mass, divide by three,
+ round down, and subtract 2. However, that fuel also requires fuel, and that fuel
+ requires fuel, and so on. Any mass that would require negative fuel should
+ instead be treated as if it requires zero fuel; the remaining mass, if any, is
+ instead handled by wishing really hard, which has no mass and is outside the
+ scope of this calculation.
 
-#+RESULTS:
-: 5093620
+ So, for each module mass, calculate its fuel and add it to the total. Then,
+ treat the fuel amount you just calculated as the input mass and repeat the
+ process, continuing until a fuel requirement is zero or negative. For example:
+
+ A module of mass 14 requires 2 fuel. This fuel requires no further fuel (2
+ divided by 3 and rounded down is 0, which would call for a negative fuel), so
+ the total fuel required is still just 2.
+
+ At first, a module of mass 1969 requires 654 fuel. Then, this fuel requires 216
+ more fuel (654 / 3 - 2). 216 then requires 70 more fuel, which requires 21 fuel,
+ which requires 5 fuel, which requires no further fuel. So, the total fuel
+ required for a module of mass 1969 is 654 + 216 + 70 + 21 + 5 = 966.
+
+ The fuel required by a module of mass 100756 and its fuel is:
+ 33583 + 11192 +3728 + 1240 + 411 + 135 + 43 + 12 + 2 = 50346.
+
+ What is the sum of the fuel requirements for all of the modules on your
+ spacecraft when also taking into account the mass of the added fuel? (Calculate
+ the fuel requirements for each module separately, then add them all up at the
+ end.)
+
+
+ ---
+
+ Let's just try the naive version. We will calculate the fuel requirements again
+ for each mass, this time recursing for each until we hit a value that is <= 0.
+
+ Fun fact: =defn= is a valid =recur= target, so we don't need a =loop= here as
+ long as we're a tiny bit clever with our function signature.
+
+ #+begin_src clojure :ns advent-2019.day1 :noweb-ref code
+ (defn fuel2
+   ([mass]
+    ;; we don't add the initial mass. we just want the fuel's mass
+    ;; so we initialize the loop with the mass of the fuel
+    (fuel2 (fuel mass) 0))
+   ([mass sum]
+    (if (<= mass 0)
+      sum
+      (recur (fuel mass)
+             (+ sum mass)))))
+
+ (assert (= (fuel2 1969) 966))
+
+ (assert (= (fuel2 100756) 50346))
+
+ #+end_src
+
+ #+RESULTS:
+ : nil#'advent-2019.day1/fuel2nilnil
+
+ Seems fast enough on the test input. Let's do it!
+
+ #+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
+ (def part2 (transduce (map fuel2) + input))
+
+ (println part2)
+ #+end_src
+
+ #+RESULTS:
+ : 5093620
