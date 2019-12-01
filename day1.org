@@ -36,7 +36,8 @@ To start, let's load the input.
 : nilnilnil#'user/input
 
 
-We also can encode the mass calculation: take the mass, divide by 3, round down, then minus 2
+We also can encode the mass calculation: take the mass, divide by 3, round down,
+minus 2
 
 #+begin_src clojure
   (defn fuel [mass] 
