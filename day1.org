@@ -19,7 +19,9 @@ The Fuel Counter-Upper needs to know the total fuel requirement. To find it, ind
 
 * Prelude
 
-To start, let's load the input.
+To start, let's load the input. Each line of our input is a different mass; so
+I start by reading it from my classpath ("resources/day1.input") and split it on
+new line. Then, I convert each line from a string to an integer.
 
 #+begin_src clojure :ns advent-2019.day1 :noweb yes :mkdirp yes :tangle src/advent-2019/day1.clj
 (require '[clojure.java.io :as io])
@@ -54,6 +56,16 @@ minus 2
 * Part 1
 
 What is the sum of the fuel requirements for all of the modules on your spacecraft?
+
+
+---
+
+This seems easy enough. We need to calculate the fuel required for each mass in
+our input, and then sum it all up.
+
+The first step can be easily done with a =map= over the sequence of masses.
+Summing them up sounds like a =reduce=; to do it all in one go, we can use
+transducers!
 
 #+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
 (def part1 (transduce (map fuel) + input))
@@ -103,11 +115,17 @@ end.)
 
 ---
 
-Let's just try the naive version:
+Let's just try the naive version. We will calculate the fuel requirements again
+for each mass, this time recursing for each until we hit a value that is <= 0.
+
+Fun fact: =defn= is a valid =recur= target, so we don't need a =loop= here as
+long as we're a tiny bit clever with our function signature.
 
 #+begin_src clojure :ns advent-2019.day1 :noweb-ref code
 (defn fuel2
   ([mass]
+   ;; we don't add the initial mass. we just want the fuel's mass
+   ;; so we initialize the loop with the mass of the fuel
    (fuel2 (fuel mass) 0))
   ([mass sum]
    (if (<= mass 0)

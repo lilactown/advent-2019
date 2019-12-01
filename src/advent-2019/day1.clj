@@ -17,6 +17,8 @@
 
 (defn fuel2
   ([mass]
+   ;; we don't add the initial mass. we just want the fuel's mass
+   ;; so we initialize the loop with the mass of the fuel
    (fuel2 (fuel mass) 0))
   ([mass sum]
    (if (<= mass 0)
