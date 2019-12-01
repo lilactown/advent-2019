@@ -21,9 +21,7 @@ The Fuel Counter-Upper needs to know the total fuel requirement. To find it, ind
 
 To start, let's load the input.
 
-#+begin_src clojure :tangle yes
-(ns advent-2019.day1)
-
+#+begin_src clojure :ns advent-2019.day1 :noweb yes :exports none :mkdirp yes :tangle src/advent-2019/day1.clj
 (require '[clojure.java.io :as io])
 
 (require '[clojure.string :as string])
@@ -32,6 +30,8 @@ To start, let's load the input.
                (slurp)
                (string/split #"\n")
                (->> (map #(Integer/parseInt %)))))
+
+<<code>>
 #+end_src
 
 #+RESULTS:
@@ -41,9 +41,10 @@ To start, let's load the input.
 We also can encode the mass calculation: take the mass, divide by 3, round down,
 minus 2
 
-#+begin_src clojure :ns advent-2019.day1 :tangle yes
-(defn fuel [mass] 
+#+begin_src clojure :ns advent-2019.day1 :noweb-ref code
+(defn fuel [mass]
   (-> mass (/ 3) (Math/floor) (- 2) (int)))
+
 #+end_src
 
 #+RESULTS:
@@ -54,10 +55,11 @@ minus 2
 
 What is the sum of the fuel requirements for all of the modules on your spacecraft?
 
-#+begin_src clojure :results output :ns advent-2019.day1
+#+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
 (def part1 (transduce (map fuel) + input))
 
 (println part1)
+
 #+end_src
 
 #+RESULTS:
@@ -103,8 +105,8 @@ end.)
 
 Let's just try the naive version:
 
-#+begin_src clojure :ns advent-2019.day1
-(defn fuel2 
+#+begin_src clojure :ns advent-2019.day1 :noweb-ref code
+(defn fuel2
   ([mass]
    (fuel2 (fuel mass) 0))
   ([mass sum]
@@ -124,7 +126,7 @@ Let's just try the naive version:
 
 Seems fast enough on the test input. Let's do it!
 
-#+begin_src clojure :results output :ns advent-2019.day1
+#+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
 (def part2 (transduce (map fuel2) + input))
 
 (println part2)
