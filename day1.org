@@ -23,8 +23,13 @@ The Fuel Counter-Upper needs to know the total fuel requirement. To find it, ind
  To start, let's load the input. Each line of our input is a different mass; so
  I start by reading it from my classpath ("resources/day1.input") and split it on
  new line. Then, I convert each line from a string to an integer.
+ 
 
- #+begin_src clojure :ns advent-2019.day1 :noweb yes :mkdirp yes :tangle src/advent-2019/day1.clj
+ #+begin_src clojure :ns advent-2019.day1 :noweb yes :export no :mkdirp yes :tangle src/advent-2019/day1.clj
+ <<code>>
+ #+end_src
+
+ #+begin_src clojure :ns advent-2019.day1 :noweb-ref code
  (require '[clojure.java.io :as io])
 
  (require '[clojure.string :as string])
@@ -34,7 +39,6 @@ The Fuel Counter-Upper needs to know the total fuel requirement. To find it, ind
                 (string/split #"\n")
                 (->> (map #(Integer/parseInt %)))))
 
- <<code>>
  #+end_src
 
  #+RESULTS:
