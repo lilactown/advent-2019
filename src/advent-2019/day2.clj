@@ -3,7 +3,10 @@
           1  :add
           2  :multiply})
 
-(defn parameters [program address]
+(defn parameters
+  "Takes a program and address of an opcode. Returns a vector of the
+  first parameter, second parameter and the result address"
+  [program address]
   (let [param1-address (get program (+ 1 address))
         param2-address (get program (+ 2 address))
         result-address (get program (+ 3 address))]
@@ -12,9 +15,11 @@
      result-address]))
 
 (defmulti -instruction (fn [op-name _ _ _ _]
-               op-name))
+                         op-name))
 
-(defn do-instruction [program address]
+(defn do-instruction
+  "Executes the instruction at address, returning a new program memory"
+  [program address]
   (let [opcode (get program address)
         op-name (ops opcode)]
     (let [[param1 param2 result-address] (parameters program address)]
@@ -36,6 +41,8 @@
             30,40,50]))
 
 (defn run-seq
+  "Returns a lazy sequence of each invocation of the program.
+  Returns `nil` once the program halts."
   ([program] (cons program (run-seq program 0)))
   ([program address]
    (lazy-seq
@@ -69,7 +76,9 @@
  (prn (first (rest (rest (rest test-seq)))))) ;; 💥
 
 ;; fix when opcode is `nil`
-(defn do-instruction [program address]
+(defn do-instruction
+  "Executes the instruction at address, returning a new program memory"
+  [program address]
   (when-let [opcode (get program address)]
     (let [op-name (ops opcode)
           [param1 param2 result-address] (parameters program address)]
@@ -111,14 +120,20 @@
                            (run-until-halt)
                            (get 0))))
 
-(defn result-with-inputs [program noun verb]
+(defn result-with-inputs
+  "Runs the program until it halts with the `noun` and `verb`, returning the
+  result at address 0 of the final memory."
+  [program noun verb]
   (-> program
       (assoc 1 noun
              2 verb)
       (run-until-halt)
       (get 0)))
 
-(defn results [program]
+(defn results
+  "Returns a lazy sequence that for each noun and verb, runs the program until
+  it halts. Each element is a vector of the result, noun and verb "
+  [program]
   (for [noun (range 0 168)
         verb (range 0 168)]
     ;; return the memory, and the current noun and verb in a vector
