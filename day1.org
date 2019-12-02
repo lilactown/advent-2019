@@ -9,7 +9,7 @@ https://adventofcode.com/2019/day/1
  new line. Then, I convert each line from a string to an integer.
  
 
- #+begin_src clojure :ns advent-2019.day1 :noweb yes :exports no :mkdirp yes :tangle src/advent-2019/day1.clj
+ #+begin_src clojure :ns advent-2019.day1 :noweb yes :exports no :mkdirp yes :tangle src/advent_2019/day1.clj
  <<code>>
  #+end_src
 

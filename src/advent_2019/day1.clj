@@ -13,7 +13,7 @@
 
 (def part1 (transduce (map fuel) + input))
 
-(println part1)
+(println ::part1 part1)
 
 (defn fuel2
   ([mass]
@@ -32,4 +32,4 @@
 
 (def part2 (transduce (map fuel2) + input))
 
-(println part2)
+(println ::part2 part2)
