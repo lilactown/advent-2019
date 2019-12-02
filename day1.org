@@ -26,7 +26,7 @@ https://adventofcode.com/2019/day/1
  #+end_src
 
  #+RESULTS:
- : nilnilnilnil#'advent-2019.day1/input
+ : nilnilnil#'advent-2019.day1/input
 
 
  We also can encode the mass calculation:
@@ -59,15 +59,15 @@ https://adventofcode.com/2019/day/1
  Summing them up sounds like a =reduce=; to do it all in one go, we can use
  transducers!
 
- #+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
+ #+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code :exports both
  (def part1 (transduce (map fuel) + input))
 
- (println part1)
+ (println ::part1 part1)
 
  #+end_src
 
  #+RESULTS:
- : 3397667
+ : :advent-2019.day1/part1 3397667
 
 
 ** Part 2
@@ -109,11 +109,11 @@ https://adventofcode.com/2019/day/1
 
  Seems fast enough on the test input. Let's do it!
 
- #+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code
+ #+begin_src clojure :results output :ns advent-2019.day1 :noweb-ref code :exports both
  (def part2 (transduce (map fuel2) + input))
 
- (println part2)
+ (println ::part2 part2)
  #+end_src
 
  #+RESULTS:
- : 5093620
+ : :advent-2019.day1/part2 5093620
