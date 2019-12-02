@@ -95,7 +95,7 @@ and use the =lazy-seq= macro:
 The nice thing about this is it allows us to step through each operation of our
 program to debug it! For instance:
 
-#+begin_src clojure :ns advent-2019.day2 :noweb-ref code :results output
+#+begin_src clojure :ns advent-2019.day2 :noweb-ref code :results output :exports both
 (def test-seq (run-seq [1,9,10,3,2,3,11,0,99,30,40,50]))
 ;; explodes 😬
 (try (take 10 test-seq)
@@ -187,7 +187,7 @@ Take our input, and revert it back to the state it had before it caught fire:
 
 Then find the value at address 0 once the program halts.
 
-#+begin_src clojure :ns advent-2019.day2 :noweb-ref code :results output
+#+begin_src clojure :ns advent-2019.day2 :noweb-ref code :results output :exports both
 (require '[clojure.java.io :as io])
 
 (require '[clojure.string :as string])
@@ -254,7 +254,7 @@ caused my solution to NPE. My best guess is this causes the program to start
 accessing memory beyond it's tape. I'm going to just cap it there for now and
 see if the answer happens before it.
 
-#+begin_src clojure :ns advent-2019.day2 :noweb-ref code :results output
+#+begin_src clojure :ns advent-2019.day2 :noweb-ref code :results output :exports both
 ;; set the search result 1 above 19690720 so that it will output the result
 (let [[_ noun verb] (time
                      (last
