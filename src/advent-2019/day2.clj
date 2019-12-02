@@ -4,11 +4,11 @@
           2  :multiply})
 
 (defn parameters [program address]
-  (let [arg1-address (get program (+ 1 address))
-        arg2-address (get program (+ 2 address))
+  (let [param1-address (get program (+ 1 address))
+        param2-address (get program (+ 2 address))
         result-address (get program (+ 3 address))]
-    [(get program arg1-address)
-     (get program arg2-address)
+    [(get program param1-address)
+     (get program param2-address)
      result-address]))
 
 (defmulti -instruction (fn [op-name _ _ _ _]
@@ -17,17 +17,17 @@
 (defn do-instruction [program address]
   (let [opcode (get program address)
         op-name (ops opcode)]
-    (let [[arg1 arg2 result-address] (parameters program address)]
-      (-instruction op-name arg1 arg2 result-address program))))
+    (let [[param1 param2 result-address] (parameters program address)]
+      (-instruction op-name param1 param2 result-address program))))
 
 (defmethod -instruction :halt [_ _ _ _ _]
   nil)
 
-(defmethod -instruction :add [_ arg1 arg2 result-address program]
-  (assoc program result-address (+ arg1 arg2)))
+(defmethod -instruction :add [_ param1 param2 result-address program]
+  (assoc program result-address (+ param1 param2)))
 
-(defmethod -instruction :multiply [_ arg1 arg2 result-address program]
-  (assoc program result-address (* arg1 arg2)))
+(defmethod -instruction :multiply [_ param1 param2 result-address program]
+  (assoc program result-address (* param1 param2)))
 
 (assert (= (do-instruction [1,9,10,3,2,3,11,0,99,30,40,50] 0)
            [1,9,10,70,
@@ -72,8 +72,8 @@
 (defn do-instruction [program address]
   (when-let [opcode (get program address)]
     (let [op-name (ops opcode)
-          [arg1 arg2 result-address] (parameters program address)]
-     (-instruction op-name arg1 arg2 result-address program))))
+          [param1 param2 result-address] (parameters program address)]
+     (-instruction op-name param1 param2 result-address program))))
 
 (defn run-until-halt [program]
   (last (take-while (comp not nil?) (run-seq program))))
