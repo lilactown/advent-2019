@@ -1,7 +1,7 @@
 * Advent of Code 2019
 
 The past two years of Advent of Code, I have used it as an opportunity to learn
-new programming languages. The first one I did, I learned ReasonML/OCaml and 
+new programming languages. The first one I did, I [[https://codeburst.io/25-days-of-reasonml-a4b20a7e8c6][learned ReasonML/OCaml]] and 
 used the bucklescript toolchain. Last year, I attempted to do dual Clojure
 (which I already knew) and Rust solutions, but didn't get very far due to time.
 
