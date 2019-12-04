@@ -1,0 +1,209 @@
+* Day 3: Crossed Wires
+
+https://adventofcode.com/2019/day/3
+
+#+begin_src clojure :ns advent-2019.day3 :noweb yes :exports no :mkdirp yes :tangle src/advent_2019/day3.clj
+
+<<code>>
+
+#+end_src
+
+The wire diagrams have always been tricky for me in previous years.
+I'm going to try and tackle it similar to the last problem, by building a lazy
+sequence of coordinates out of the wire descriptions. Transducers will be
+exercised heavily, for no particularly good reason.
+
+#+begin_src clojure :ns advent-2019.day3 :noweb-ref code :results output
+(defn segment [origin desc]
+  (let [direction (first desc)
+        amount (Integer/parseInt (subs desc 1))
+        [x y] origin]
+    (case direction
+      \R (for [x' (range (inc x) (+ x amount 1))]
+               [x' y])
+      ;; reverse direction of range so that it will generate a seq from
+      ;; origin to -amount
+      \L (for [x' (reverse (range (- x amount) x))]
+              [x' y])
+      \U (for [y' (range (inc y) (+ y amount 1))]
+            [x y'])
+      \D (for [y' (reverse (range (- y amount) y))]
+              [x y']))))
+
+(segment [0 0] "R10")
+;; => ([1 0] [2 0] [3 0] [4 0] [5 0] [6 0] [7 0] [8 0] [9 0] [10 0])
+(segment [0 0] "L10")
+;; => ([-1 0] [-2 0] [-3 0] [-4 0] [-5 0] [-6 0] [-7 0] [-8 0] [-9 0] [-10 0])
+(segment [0 0] "U10")
+;; => ([0 1] [0 2] [0 3] [0 4] [0 5] [0 6] [0 7] [0 8] [0 9] [0 10])
+(segment [0 0] "D10")
+;; => ([0 -1] [0 -2] [0 -3] [0 -4] [0 -5] [0 -6] [0 -7] [0 -8] [0 -9] [0 -10])
+
+#+end_src
+
+#+RESULTS:
+
+Next, we'll create a /stateful transducer/ that will generate a sequence of
+segments. Each element of the sequence will be another sequence of points,
+e.g. ="U2,R3"= would become =(([0 1] [0 2]) ([1 2] [2 2] [3 2]))=.
+
+The reason it needs to be stateful is because, for each segment, we need
+to keep track of the last point in the previous segment to know where to start
+the next one.
+
+A line will simply be the concatenation of each segment into a single sequence.
+
+#+begin_src clojure :ns advent-2019.day3 :noweb-ref code :results output
+(defn segments
+  "Creates a transducer of each segment in a line"
+  ([] (segments [0 0]))
+  ([origin]
+   (fn [rf]
+     (let [origin (volatile! origin)]
+       (fn
+         ([] (rf))
+         ([result]
+          (rf result))
+         ([result input]
+          (let [s (segment @origin input)]
+            (vreset! origin (last s))
+            (rf result s))))))))
+
+(require '[clojure.string :as string])
+
+(defn line [text]
+  (->> (string/split text #",")
+       (sequence (comp (segments) cat))))
+
+(line "U2,R3")
+;; => ([0 1] [0 2] [1 2] [2 2] [3 2])
+
+#+end_src
+
+#+RESULTS:
+
+* Part 1
+  
+Part 1 wants us to to find all the points where two wires cross, and then give
+it the distance of the one closest to where we started.
+
+We need a way to lazily find all elements that show up at least twice in a
+sequence. I decided to copy the source for [[https://clojuredocs.org/clojure.core/distinct][distinct]] and tweak it a bit. Clojure,
+meet =indistinct=:
+
+#+begin_src clojure :ns advent-2019.day3 :noweb-ref code :results output
+(defn indistinct
+  ([coll]
+   (let [step (fn step [xs seen]
+                (lazy-seq
+                 ((fn [[f :as xs] seen]
+                    (when-let [s (seq xs)]
+                      (if (contains? seen f)
+                        (cons f (step (rest s) seen))
+                        (recur (rest s) (conj seen f)))))
+                  xs seen)))]
+     (step coll #{}))))
+
+#+end_src
+
+#+RESULTS:
+
+The last bit is to define the function for the manhatten distance equation and
+put all the pieces together!
+
+#+begin_src clojure :ns advent-2019.day3 :noweb-ref code :results output
+(defn manhatten
+  ([[x y]]
+   (+ (Math/abs x)
+      (Math/abs y)))
+  ([[x1 y1] [x2 y2]]
+   (+ (Math/abs (- x1 x2))
+      (Math/abs (- y1 y2)))))
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src clojure :ns advent-2019.day3 :noweb-ref code :results output :exports both
+(defn part1 [[wire1 wire2]]
+  (let [line1 (line wire1)
+        line2 (line wire2)]
+    ;; `distinct` ensures we don't count wires crossing themselves
+    (->> (concat (distinct line1) (distinct line2))
+         (indistinct)
+         (map manhatten)
+         (apply min))))
+
+(part1 ["R8,U5,L5,D3" "U7,R6,D4,L4"])
+;; => 6
+
+(part1 ["R75,D30,R83,U83,L12,D49,R71,U7,L72"
+        "U62,R66,U55,R34,D71,R55,D58,R83"])
+;; => 157
+
+(part1 ["R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
+        "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"])
+;; => 135
+
+
+(require '[clojure.java.io :as io])
+
+(def input (-> (io/resource "day3.input")
+               (slurp)
+               (string/split #"\n")))
+
+(prn (time (part1 input)))
+
+#+end_src
+
+#+RESULTS:
+: "Elapsed time: 558.850352 msecs"
+: 1084
+
+* Part 2
+
+I was very worried that part 2 would have something to do with which direction
+you were moving at different points, which my solution discards when creating
+points. Luckily, it's a little bit easier: we need to find the point where the
+wires cross that is the least number of /steps/ away from the origin (not 
+closest).
+
+This isn't the fastest solution, but it was close at hand. It uses the same
+bits as part 1 to find all the crosses, and then iterates back over the two
+lines to find the index in each of them. Then adds it together and finds the
+min.
+
+#+begin_src clojure :ns advent-2019.day3 :noweb-ref code :results output :exports both
+;; https://stackoverflow.com/a/4831170/4379329
+(defn find-thing [needle haystack]
+  (first (keep-indexed #(when (= %2 needle) %1) haystack)))
+
+(defn part2 [[wire1 wire2]]
+  (let [line1 (line wire1)
+        line2 (line wire2)
+        crosses (->> (concat (distinct line1) (distinct line2))
+                     (indistinct))]
+    (+ 2 ;; add two because the sequence are zero-indexed
+       (apply min (for [point crosses]
+                    (+ (find-thing point line1)
+                       (find-thing point line2)))))))
+
+(part2 ["R8,U5,L5,D3" "U7,R6,D4,L4"])
+;; => 30
+
+(part2 ["R75,D30,R83,U83,L12,D49,R71,U7,L72"
+        "U62,R66,U55,R34,D71,R55,D58,R83"])
+;; => 610
+
+
+(part2 ["R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
+        "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"])
+;; => 410
+
+(prn (time (part2 input)))
+
+#+end_src
+
+#+RESULTS:
+: "Elapsed time: 633.962615 msecs"
+: 9240
