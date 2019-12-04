@@ -20,13 +20,16 @@ failed and if not, why.
 To start let's define a spec for our password length: it should always be 6
 digits long.
 
+=(quot m n)= is the value of m/n, rounded towards 0 to the nearest integer. By
+dividing by 100000, it will give me a number between 1 and 9 for anything that
+is 6 digits.
+
 #+begin_src clojure advent-2019.day4 :noweb-ref code :results output
 (require '[clojure.spec.alpha :as s])
 
 (quot 923456 100000)
 
 (s/def ::length
-  #_#(= 6 (count (str %)))
   #(let [q (quot % 100000)]
      (and (< 0 q)
           (> 10 q))))

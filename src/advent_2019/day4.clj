@@ -4,7 +4,6 @@
 (quot 923456 100000)
 
 (s/def ::length
-  #_#(= 6 (count (str %)))
   #(let [q (quot % 100000)]
      (and (< 0 q)
           (> 10 q))))
