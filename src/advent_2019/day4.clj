@@ -19,7 +19,9 @@
 ;; => false
 
 ;; https://stackoverflow.com/a/29942388/4379329
-(defn digits [n]
+(defn digits
+  "Takes an integer `n`, and returns a sequence of its digits"
+  [n]
   (->> n
        (iterate #(quot % 10))
        (take-while pos?)
