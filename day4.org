@@ -1,0 +1,171 @@
+* Day 4: Secure Container
+
+https://adventofcode.com/2019/day/4
+
+#+begin_src clojure :ns advent-2019.day4 :noweb yes :exports no :mkdirp yes :tangle src/advent_2019/day4.clj
+
+<<code>>
+
+#+end_src
+
+Password validation, my specialty! I'm going to use [[https://clojure.org/guides/spec][clojure spec]] for giggles
+to define the rules for our password here.
+
+Spec works by defining a keyword to refer to your spec, along with a predicate
+that should return true or false whether it passes.
+
+You can then use functions like =valid?= and =explain= to check if your spec
+failed and if not, why.
+
+To start let's define a spec for our password length: it should always be 6
+digits long.
+
+#+begin_src clojure advent-2019.day4 :noweb-ref code :results output
+(require '[clojure.spec.alpha :as s])
+
+(quot 923456 100000)
+
+(s/def ::length
+  #_#(= 6 (count (str %)))
+  #(let [q (quot % 100000)]
+     (and (< 0 q)
+          (> 10 q))))
+
+(s/valid? ::length 523456)
+;; => true
+
+(s/valid? ::length 123)
+;; => false
+
+(s/valid? ::length 1234567)
+;; => false
+
+#+end_src
+
+#+RESULTS:
+
+The next rule is that it should contain at least one pair of duplicate digits
+which are adjacent to each other.
+
+I swiped a =digits= function off of stack overflow and then ran =dedupe= on it.
+Then, we compare the deduped sequence to the original sequence of digits. Reads
+nicely, I think.
+
+#+begin_src clojure advent-2019.day4 :noweb-ref code :results output
+;; https://stackoverflow.com/a/29942388/4379329
+(defn digits [n]
+  (->> n
+       (iterate #(quot % 10))
+       (take-while pos?)
+       (mapv #(mod % 10))
+       rseq))
+
+(digits 1234)
+
+(s/def ::adjacent-dupe
+  #(let [d (digits %)]
+     (not= d (dedupe d))))
+
+(s/valid? ::adjacent-dupe 1212234)
+;; => true
+
+(s/valid? ::adjacent-dupe 121234)
+;; => false
+
+#+end_src
+
+#+RESULTS:
+
+The last rule, I felt really clever when I thought of this: =<== takes any 
+number of arguments, and returns true as long as they are always increasing or
+equal. So we can use =apply= along with our =digits= function above for a nice
+one-liner.
+
+#+begin_src clojure advent-2019.day4 :noweb-ref code :results output :exports both
+(s/def ::monotonic
+  #(apply <= (digits %)))
+
+(s/valid? ::monotonic 1111)
+;; => true
+
+(s/valid? ::monotonic 1211)
+;; => false
+
+(s/valid? ::monotonic 1123448)
+;; => true
+
+#+end_src
+
+#+RESULTS:
+
+Finally, we put it all together using Clojure spec's =and= combinator. Take
+the sequence of numbers between my input range, filter the invalid ones out,
+and count it up!
+
+#+begin_src clojure advent-2019.day4 :noweb-ref code :results output
+(s/def ::password
+  (s/and ::length ::adjacent-dupe ::monotonic))
+
+;; test cases
+(s/valid? ::password 111111)
+;; => true
+
+(s/valid? ::password 223450)
+;; => false
+
+(s/valid? ::password 123789)
+;; => false
+
+
+(print ::part1 (time (count (sequence (filter #(s/valid? ::password %))
+                                      (range 168630 718098)))))
+
+#+end_src
+
+#+RESULTS:
+: "Elapsed time: 1431.595085 msecs"
+: :user/part1 1686
+
+
+* Part 2
+
+Part 2 was a little complicated on first glance. It's a rework of our
+=adjacent-dupe= spec above, where we need to make sure that the duplicates are
+not a part of a larger group of 3 or more.
+
+Someone reminded me of the =frequencies= function which allowed me to delete a
+bunch of code I wrote. The idea is that we create a map like:
+
+#+begin_src clojure
+(frequencies (digits 1112344))
+;; => {1 3, 2 1, 3 1, 4 2}
+#+end_src
+
+Which we then use =some= to ensure that a map entry exists with the value =2=,
+as in it only appears once in the sequence of digits.
+
+#+begin_src clojure advent-2019.day4 :noweb-ref code :results output :exports both
+(s/def ::adjacent-dupe
+  (fn [n]
+    (some #(= 2 (second %))
+          (frequencies (digits n)))))
+
+(s/valid? ::adjacent-dupe 112233)
+;; => true
+
+(s/valid? ::adjacent-dupe 123444)
+;; => false
+
+(s/valid? ::adjacent-dupe 111122)
+;; => true
+
+(s/def ::password
+  (s/and ::length ::adjacent-dupe ::monotonic))
+
+(print ::part2 (time (count (sequence (filter #(s/valid? ::password %))
+                                      (range 168630 718098)))))
+#+end_src
+
+#+RESULTS:
+: "Elapsed time: 1732.081998 msecs"
+: :user/part2 1145
