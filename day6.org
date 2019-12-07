@@ -1,0 +1,248 @@
+* Day 6: Universal Orbit Map
+
+https://adventofcode.com/2019/day/6
+
+#+begin_src clojure :ns advent-2019.day6 :noweb yes :exports no :mkdirp yes :tangle src/advent_2019/day6.clj
+
+<<code>>
+
+#+end_src
+
+I love graph problems; they are such a nice blend between programming algorithms
+and math.
+
+To start with, we need a way to get our orbits into a data format that
+represents a graph.
+
+In this case, I decided to use a hashmap where each key was a node, and each
+value is a set of nodes it connects to.
+
+#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output
+(require '[clojure.string :as string])
+
+(defn orbits [input]
+  (loop [lines (string/split input #"\n")
+         orbs {}]
+    (if lines
+      (let [[lhs rhs] (string/split (first lines) #"\)")]
+        (recur (next lines)
+               (update orbs lhs (fnil conj #{}) rhs)))
+      orbs)))
+
+#+end_src
+
+#+RESULTS:
+
+Example:
+
+#+begin_src clojure :ns advent-2019.day6 :results output :exports both
+(require '[clojure.pprint :refer [pprint]])
+
+(def example "COM)B
+B)C
+C)D
+D)E
+E)F
+B)G
+G)H
+D)I
+E)J
+J)K
+K)L")
+
+(pprint (orbits example))
+#+end_src
+
+#+RESULTS:
+: {"COM" #{"B"},
+:  "B" #{"G" "C"},
+:  "C" #{"D"},
+:  "D" #{"E" "I"},
+:  "E" #{"J" "F"},
+:  "G" #{"H"},
+:  "J" #{"K"},
+:  "K" #{"L"}}
+
+Before we start on the solution itself, I wanted to be able to visualize what
+the graph actually looks like 
+
+#+begin_src clojure :ns advent-2019.day6 :results output
+(defn normalize [edges root]
+  (let [leafs (edges root)]
+    {root (if (empty? leafs)
+            nil
+            (into
+             {}
+             (for [node (edges root)]
+               [node (normalize edges node)])))}))
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src clojure :ns advent-2019.day6 :results output :exports both
+(require '[clojure.inspector :as inspector])
+
+(-> example
+    (orbits)
+    (normalize "COM")
+    (pprint))
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+{"COM"
+ {"B"
+  {"B"
+   {"G" {"G" {"H" {"H" nil}}},
+    "C"
+    {"C"
+     {"D"
+      {"D"
+       {"E"
+        {"E" {"J" {"J" {"K" {"K" {"L" {"L" nil}}}}}, "F" {"F" nil}}},
+        "I" {"I" nil}}}}}}}}}
+#+end_example
+
+* Part 1
+
+#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output
+(defn count-all-edges [edges root depth]
+  (+ depth (reduce (fn [c node]
+                     (+ c (count-all-edges edges node (inc depth))))
+                   0
+                   (edges root))))
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_Src clojure :ns advent-2019.day6 :results value :exports both
+(count-all-edges (orbits example) "COM" 0)
+#+end_src
+
+#+RESULTS:
+: 42
+
+#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output :exports both
+(require '[clojure.java.io :as io])
+
+(def input (-> (io/resource "day6.input")
+               (slurp)))
+
+(prn ::part1 (-> input
+                 (orbits)
+                 (count-all-edges "COM" 0)))
+
+#+end_src
+
+#+RESULTS:
+: :advent-2019.day6/part1 301100
+
+* Part 2
+
+#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output
+(defn invert-orbits [input]
+  (loop [lines (string/split input #"\n")
+         orbs {}]
+    (if lines
+      (let [[lhs rhs] (string/split (first lines) #"\)")]
+        (recur (next lines)
+               (update orbs rhs (fnil conj #{}) lhs)))
+      orbs)))
+
+(defn path [edges root]
+  ;; by inverting the orbits, we guarantee that edges will only ever have one leaf
+  (let [node (first (edges root))]
+    (cons root
+          (if (nil? node)
+            nil
+            (path edges node)))))
+
+#+end_src
+
+#+begin_Src clojure :ns advent-2019.day6 :results output
+(def example2 "COM)B
+B)C
+C)D
+D)E
+E)F
+B)G
+G)H
+D)I
+E)J
+J)K
+K)L
+K)YOU
+I)SAN")
+
+(path (invert-orbits example2) "SAN")
+;; => ("SAN" "I" "D" "C" "B" "COM")
+
+(path (invert-orbits example2) "YOU")
+;; => ("YOU" "K" "J" "E" "D" "C" "B" "COM")
+
+#+end_src
+
+#+RESULTS:
+
+
+
+#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output
+(defn first-common-node [p1 p2]
+  (loop [p1 p1
+         d1 -1] ;; don't count first node
+    (when p1
+      (if-let [found (some #{(first p1)} p2)]
+        `(~found ~d1)
+        (recur (next p1)
+               (inc d1))))))
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_Src clojure :ns advent-2019.day6 :results output
+(first-common-node
+ (path (invert-orbits example2) "SAN")
+ (path (invert-orbits example2) "YOU"))
+;; => ("D" 1)
+
+(first-common-node
+ (path (invert-orbits example2) "YOU")
+ (path (invert-orbits example2) "SAN"))
+;; => ("D" 3)
+
+(+ 3 1)
+;; => 4
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output
+(def you (-> (io/resource "day6.input")
+             (slurp)
+             (invert-orbits)
+             (path "YOU")))
+
+(def santa (-> (io/resource "day6.input")
+               (slurp)
+               (invert-orbits)
+               (path "SAN")))
+
+
+
+(first-common-node you santa)
+;; => ("59F" 288)
+
+(first-common-node santa you)
+;; => ("59F" 259)
+
+(prn ::part2 (+ 288 259))
+;; => 547
+#+end_src
+
+#+RESULTS:
+: :advent-2019.day6/part2 547
