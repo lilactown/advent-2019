@@ -221,7 +221,7 @@ I)SAN")
 
 #+RESULTS:
 
-#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output
+#+begin_src clojure :ns advent-2019.day6 :noweb-ref code :results output :exports both
 (def you (-> (io/resource "day6.input")
              (slurp)
              (invert-orbits)
@@ -241,7 +241,6 @@ I)SAN")
 ;; => ("59F" 259)
 
 (prn ::part2 (+ 288 259))
-;; => 547
 #+end_src
 
 #+RESULTS:
