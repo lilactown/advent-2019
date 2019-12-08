@@ -22,11 +22,8 @@
    (-> "1002,4,3,4,33"
        (i/create-program "1")
        (i/compute)
-       (= {:memory ["1002" "4" "3" "4" "99"],
-           :pointer 4,
-           :input "1",
-           :output [],
-           :running? true})))
+       :memory
+       (= ["1002" "4" "3" "4" "99"])))
 
   (t/is
    (-> "3,0,4,0,99"
@@ -34,7 +31,8 @@
        (i/compute)
        (i/compute)
        (i/compute)
-       (= {:memory ["1" "0" "4" "0" "99"], :pointer 4, :input "1", :output [1], :running? false}))))
+       :memory
+       (= ["1" "0" "4" "0" "99"]))))
 
 (t/deftest run-simple
   (t/is (-> "3,0,4,0,99"
