@@ -11,7 +11,7 @@ https://adventofcode.com/2019/day/8
 First step: create a way to partition the input as layers. Clojure's =partition=
 fits nicely.
 
-In order to get a fully layer as a single sequence, we take the height * width.
+In order to get a full layer as a single sequence, we take the height * width.
 This ended up being a nicer way of examining the layers than splitting it out
 further across lines within the layers.
 
