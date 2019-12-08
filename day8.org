@@ -8,6 +8,13 @@ https://adventofcode.com/2019/day/8
 
 #+end_src
 
+First step: create a way to partition the input as layers. Clojure's =partition=
+fits nicely.
+
+In order to get a fully layer as a single sequence, we take the height * width.
+This ended up being a nicer way of examining the layers than splitting it out
+further across lines within the layers.
+
 #+begin_src clojure :ns advent-2019.day8 :noweb-ref code :results output
 (defn char->int [c]
   (Integer/parseInt (String/valueOf c)))
@@ -21,10 +28,15 @@ https://adventofcode.com/2019/day/8
 
 #+RESULTS:
 
-#+begin_src clojure
+#+begin_src clojure :ns advent-2019.day8
 (layers 2 3 "123456789012")
 ;; => ((1 2 3 4 5 6) (7 8 9 0 1 2))
 #+end_src
+
+* Part 1
+
+Part 1 needs us to find the layer with the "fewest 0 digits" in it, so we
+filter the layer by =zero?= then count the elements left.
 
 #+begin_src clojure :ns advent-2019.day8 :noweb-ref code :results output
 (defn zeros [layer]
@@ -34,7 +46,9 @@ https://adventofcode.com/2019/day/8
 
 #+RESULTS:
 
-#+begin_src clojure
+Combined with =min-key=, we can find the layer that has the least count.
+
+#+begin_src clojure :ns advent-2019.day8
 (->> "123456789012"
      (layers 2 3)
      (apply min-key zeros))
@@ -43,6 +57,9 @@ https://adventofcode.com/2019/day/8
 
 #+RESULTS:
 : nil(1 2 3 4 5 6)
+
+Putting it all together: after we find the layer with the fewest 0s, we count
+the 1s and 2s up and multiply them both to get the checksum value (our answer).
 
 #+begin_src clojure :ns advent-2019.day8 :noweb-ref code :results output :exports both
 (require '[clojure.java.io :as io])
@@ -65,6 +82,21 @@ https://adventofcode.com/2019/day/8
 #+RESULTS:
 : :advent-2019.day8/part1 1848
 
+* Part 2
+
+This part requires us to look at each pixel and decide, between all the layers,
+which pixel is on top and which is on bottom.
+
+=0= is black, =1= is white, and =2= is transparent. So any pixel that is black
+or white will show up behind a transparent pixel. The top most layer with an
+actual color wins.
+
+If we assume first that we have a sequence that represents all of the layers for
+a specific pixel, it becomes easy to choose which one.
+
+While we're here, we'll return a character that will make the initial answer a
+little easier to read.
+
 #+begin_src clojure :ns advent-2019.day8 :noweb-ref code :results output
 (defn choose-px [pixels]
   (if (= 1 (reduce (fn [cur px]
@@ -77,7 +109,7 @@ https://adventofcode.com/2019/day/8
 
 #+end_src
 
-#+begin_src clojure
+#+begin_src clojure :ns advent-2019.day8
 (choose-px '(0 2 2 2))
 ;; => \space
 
@@ -85,9 +117,34 @@ https://adventofcode.com/2019/day/8
 ;; => \█
 #+end_src
 
+Each layer is comprised of a sequence of pixels. E.g.
+
+#+begin_src clojure
+'((0 1
+   0 1)
+  (1 0
+   0 1))
+#+end_src
+
+To use =choose-px= above, we need to get a sequence of each possible color,
+per pixel. E.g.:
+
+#+begin_src clojure
+'((0 1) (1 0)
+  (0 0) (1 1))
+#+end_src
+
+This is the same thing as [[https://en.wikipedia.org/wiki/Transpose][transposing]] the original matrix. We can build a simple
+function to do that (stolen from [[https://stackoverflow.com/questions/10347315/matrix-transposition-in-clojure][stack overflow]]).
+
+Finally we partition and join each line of pixels for ease of readability.
+
 #+begin_src clojure :ns advent-2019.day8 :noweb-ref code :results output
 (defn transpose [layers]
   (apply map list layers))
+
+(transpose '((0 1 0 1) (1 0 1 0)))
+;; => ((0 1) (1 0) (0 1) (1 0))
 
 (require '[clojure.string :as string])
 
@@ -103,7 +160,7 @@ https://adventofcode.com/2019/day/8
 
 #+RESULTS:
 
-#+being_src clojure
+#+begin_src clojure :ns advent-2019.day8
 (->> "0222112222120000"
      (image 2 2))
 ;; => (" █"

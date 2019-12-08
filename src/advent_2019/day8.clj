@@ -37,6 +37,9 @@
 (defn transpose [layers]
   (apply map list layers))
 
+(transpose '((0 1 0 1) (1 0 1 0)))
+;; => ((0 1) (1 0) (0 1) (1 0))
+
 (require '[clojure.string :as string])
 
 (defn image [height width pixels]
