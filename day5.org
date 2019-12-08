@@ -1,6 +1,16 @@
-#+begin_src clojure
-(ns advent-2019.intcode)
+#+begin_src clojure :ns advent-2019.intcode :noweb yes :exports no :mkdirp yes :tangle src/advent_2019/intcode.clj
 
+<<intcode>>
+
+#+end_src
+
+#+begin_src clojure :ns advent-2019.intcode-test :noweb yes :exports no :mkdirp yes :tangle src/advent_2019/intcode_test.clj
+
+<<intcode-test>>
+
+#+end_src
+
+#+begin_src clojure :noweb-ref intcode
 (declare parameters)
 
 (declare operation)
@@ -39,32 +49,43 @@
         codestring (apply str (take-last 2 opstring))]
     [(map char->int modechars) (Integer/parseInt codestring)]))
 
-(operation ["3"] 0)
-;; => [() 3]
+#+end_src
 
-(operation ["1101"] 0)
-;; => [(1 1) 1]
+#+begin_src clojure :noweb-ref intcode-test
+(require '[clojure.test :as t])
 
-(operation ["11101"] 0)
-;; => [(1 1 1) 1]
+(require '[advent-2019.intcode :as i])
 
-(operation ["99"] 0)
-;; => [() 99]
+(t/deftest operation
+  (t/is (i/operation ["3"] 0) '[() 3])
+  (t/is (i/operation ["1101"] 0) '[(1 1) 1])
+  (t/is (i/operation ["11101"] 0) '[(1 1 1) 1])
+  (t/is (i/operation ["99"] 0) '[() 99]))
+#+end_src
 
+#+RESULTS:
+: nilnilnil#'advent-2019.intcode/operation
+
+#+begin_src clojure :noweb-ref intcode
 (defn pad [xs n]
   (if (< (count xs) n)
     (pad (cons 0 xs) n)
     xs))
 
-(pad [1 1] 3)
-;; => (0 1 1)
+#+end_src
 
-(pad '(1) 3)
-;; => (0 0 1)
+#+begin_src clojure :noweb-ref intcode-test
+(t/deftest pad
+  (t/is (i/pad [1 1] 3) '(0 1 1))
+  (t/is (i/pad '(1) 3) '(0 0 1))
+  (t/is (i/pad '(1 0 1 1) 3) '(1 0 1 1)))
 
-(pad '(1 0 1 1) 3)
-;; => (1 0 1 1)
+#+end_src
 
+#+RESULTS:
+: nil#'advent-2019.intcode/pad
+
+#+begin_src clojure :noweb-ref intcode
 (defn parameters [memory pointer modes]
   {:pre [(vector? memory)]}
   (let [ps (subvec memory (inc pointer))
@@ -76,11 +97,16 @@
               (Integer/parseInt))
         1 (Integer/parseInt p)))))
 
-(parameters ["1002" "4" "3" "4" "33"] 0 '(0 1 1))
-;; => (33 3 4)
+#+end_src
 
+#+begin_src clojure :noweb-ref intcode-test
+(t/deftest parameters
+  (t/is (i/parameters ["1002" "4" "3" "4" "33"] 0 '(0 1 1))
+        '(33 3 4)))
 
+#+end_src
 
+#+begin_src clojure :noweb-ref intcode
 (defn run [program input]
   (let [compute-seq (iterate compute (create-program program input))]
     (-> (take-while :running? compute-seq)
@@ -126,23 +152,36 @@
         (update :output conj v)
         (update :pointer + 2))))
 
-(-> "1002,4,3,4,33"
-    (create-program "1")
-    (compute))
-;; => {:memory ["1002" "4" "3" "4" "132"], :pointer 4, :input "1", :output [], :running? true}
+#+end_src
 
+#+begin_src clojure :noweb-ref intcode-test
+(t/deftest compute
+  (t/is
+   (-> "1002,4,3,4,33"
+       (i/create-program "1")
+       (i/compute)
+       (= {:memory ["1002" "4" "3" "4" "99"],
+           :pointer 4,
+           :input "1",
+           :output [],
+           :running? true})))
 
-(-> "3,0,4,0,99"
-    (create-program "1")
-    (compute)
-    (compute)
-    (compute))
-;; => {:memory ["1" "0" "4" "0" "99"], :pointer 4, :input "1", :output [1], :running? false}
+  (t/is
+   (-> "3,0,4,0,99"
+       (i/create-program "1")
+       (i/compute)
+       (i/compute)
+       (i/compute)
+       (= {:memory ["1" "0" "4" "0" "99"], :pointer 4, :input "1", :output [1], :running? false}))))
 
-(-> "3,0,4,0,99"
-    (run "1"))
-;; => [1]
+(t/deftest run-simple
+  (t/is (-> "3,0,4,0,99"
+            (i/run "1")
+            (= [1]))))
 
+#+end_src
+
+#+begin_src clojure
 (ns advent-2019.day5)
 
 (require '[clojure.java.io :as io])
@@ -153,6 +192,9 @@
 ;; => [0 0 0 0 0 0 0 0 0 7566643]
 
 
+#+end_src
+
+#+begin_src clojure :noweb-ref intcode
 (ns advent-2019.intcode)
 
 (defmethod instruction 5
@@ -199,112 +241,95 @@
                                         "1" "0"))
         (update :pointer + 4))))
 
+#+end_src
 
-;; equal to position test
-(-> "3,9,8,9,10,9,4,9,99,-1,8"
-    (run "8")
-    (last)
-    (= 1))
-;; => true
+#+begin_src clojure :noweb-ref intcode-test
+(t/deftest run
+  (t/testing "equal to position test"
+    (t/is (-> "3,9,8,9,10,9,4,9,99,-1,8"
+              (i/run "8")
+              (last)
+              (= 1)))
 
-(-> "3,9,8,9,10,9,4,9,99,-1,8"
-    (run "9")
-    (last)
-    (= 0))
-;; => false
+    (t/is (-> "3,9,8,9,10,9,4,9,99,-1,8"
+              (i/run "9")
+              (last)
+              (= 0))))
 
+  (t/testing "less than position test"
+    (t/is (-> "3,9,7,9,10,9,4,9,99,-1,8"
+              (i/run "4")
+              (last)
+              (= 1)))
 
-;; less than position test
-(-> "3,9,7,9,10,9,4,9,99,-1,8"
-    (run "4")
-    (last)
-    (= 1))
-;; => true
+    (t/is (-> "3,9,7,9,10,9,4,9,99,-1,8"
+              (i/run "9")
+              (last)
+              (= 0))))
 
-(-> "3,9,7,9,10,9,4,9,99,-1,8"
-    (run "9")
-    (last)
-    (= 0))
-;; => true
+  (t/testing "equal to immediate test"
+    (t/is (-> "3,3,1108,-1,8,3,4,3,99"
+              (i/run "8")
+              (last)
+              (= 1)))
 
+    (t/is (-> "3,3,1108,-1,8,3,4,3,99"
+              (i/run "9")
+              (last)
+              (= 0))))
 
-;; equal to immediate test
-(-> "3,3,1108,-1,8,3,4,3,99"
-    (run "8")
-    (last)
-    (= 1))
-;; => true
+  (t/testing "less than immediate test"
+    (t/is (-> "3,3,1107,-1,8,3,4,3,99"
+              (i/run "4")
+              (last)
+              (= 1)))
 
-(-> "3,3,1108,-1,8,3,4,3,99"
-    (run "9")
-    (last)
-    (= 0))
-;; => true
+    (t/is (-> "3,3,1107,-1,8,3,4,3,99"
+              (i/run "9")
+              (last)
+              (= 0))))
 
+  (t/testing "jump test"
+    (t/is (-> "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9"
+              (i/run "0")
+              (last)
+              (= 0)))
 
-;; less than immediate test
-(-> "3,3,1107,-1,8,3,4,3,99"
-    (run "4")
-    (last)
-    (= 1))
-;; => true
+    (t/is (-> "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9"
+              (i/run "1")
+              (last)
+              (= 1))))
 
-(-> "3,3,1107,-1,8,3,4,3,99"
-    (run "9")
-    (last)
-    (= 0))
-;; => true
+  (t/testing "jump immediate"
+    (-> "3,3,1105,-1,9,1101,0,0,12,4,12,99,1"
+        (i/run "1")
+        (last)
+        (= 1))
 
+    (-> "3,3,1105,-1,9,1101,0,0,12,4,12,99,1"
+        (i/run "0")
+        (last)
+        (= 0)))
 
-;; jump test
-(-> "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9"
-    (run "0")
-    (last)
-    (= 0))
-;; => true
+  (t/testing "large example"
+    (let [large-example "3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99"]
+      (t/is (-> large-example
+                (i/run "4")
+                (last)
+                (= 999)))
 
-(-> "3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9"
-    (run "1")
-    (last)
-    (= 1))
-;; => true
+      (t/is (-> large-example
+                (i/run "8")
+                (last)
+                (= 1000)))
 
+      (t/is (-> large-example
+                (i/run "9")
+                (last)
+                (= 1001))))))
+#+end_src
 
-;; immediate
-(-> "3,3,1105,-1,9,1101,0,0,12,4,12,99,1"
-    (run "1")
-    (last)
-    (= 1))
-;; => true
-
-(-> "3,3,1105,-1,9,1101,0,0,12,4,12,99,1"
-    (run "0")
-    (last)
-    (= 0))
-;; => true
-
-
-;; large example
-(def large-example "3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99")
-
-(-> large-example
-    (run "4")
-    (last)
-    (= 999))
-;; => true
-
-(-> large-example
-    (run "8")
-    (last)
-    (= 1000))
-;; => true
-
-(-> large-example
-    (run "9")
-    (last)
-    (= 1001))
-;; => true
-
+#+begin_src clojure
 (ns advent-2019.day5)
 
 (-> (io/resource "day5.input")
